@@ -1,9 +1,10 @@
 import React, {useState, useLayoutEffect, useEffect} from 'react';
-import {FlatList, StyleSheet, Text, View} from 'react-native';
+import {FlatList, StyleSheet, Text, View, Button} from 'react-native';
 import {HeaderButtons, Item} from 'react-navigation-header-buttons';
 
 import AppHeaderButton from '../components/AppHeaderButton';
 import PlaceListItem from '../components/PlaceListItem';
+import {LocalNotification} from '../services/localPushController';
 
 const MOCK_DATA = [
   {
@@ -49,12 +50,19 @@ const HomeScreen = ({navigation}) => {
     return <PlaceListItem data={item} />;
   };
 
+  const handleClick = () => {
+    LocalNotification();
+  };
+
   return (
-    <FlatList
-      contentContainerStyle={styles.list}
-      data={places}
-      renderItem={renderItem}
-    />
+    <View>
+      <FlatList
+        contentContainerStyle={styles.list}
+        data={places}
+        renderItem={renderItem}
+      />
+      <Button title="Local Notification" onPress={handleClick} />
+    </View>
   );
 };
 
