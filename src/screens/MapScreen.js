@@ -10,7 +10,7 @@ const MapScreen = ({route}) => {
       <MapView
         provider={PROVIDER_GOOGLE} // remove if not using Google Maps
         style={styles.map}
-        region={{
+        initialRegion={{
           latitude: params ? params.latitude : 37.78825,
           longitude: params ? params.longitude : -122.4324,
           latitudeDelta: 0.015,
@@ -25,8 +25,8 @@ const MapScreen = ({route}) => {
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    flex: 1,
-    justifyContent: 'flex-end',
+    position: 'absolute',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   map: {

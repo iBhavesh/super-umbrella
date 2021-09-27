@@ -1,6 +1,7 @@
 import React, {useState, useLayoutEffect, useEffect} from 'react';
-import {FlatList, StyleSheet, Text, View, Button} from 'react-native';
+import {FlatList, StyleSheet, View, Button, Alert} from 'react-native';
 import {HeaderButtons, Item} from 'react-navigation-header-buttons';
+import Geolocation from 'react-native-geolocation-service';
 
 import AppHeaderButton from '../components/AppHeaderButton';
 import PlaceListItem from '../components/PlaceListItem';
@@ -31,29 +32,54 @@ const MOCK_DATA = [
 
 const HomeScreen = ({navigation}) => {
   const [places, setPlaces] = useState([]);
+  const [locationLoading, setLocationLoading] = useState(false);
 
   useEffect(() => {
     setPlaces(MOCK_DATA);
   }, [setPlaces]);
 
-  // useLayoutEffect(() => {
-  //   navigation.setOptions({
-  //     headerRight: () => (
-  //       <HeaderButtons HeaderButtonComponent={AppHeaderButton}>
-  //         <Item iconName="ios-add" iconSize={30} style={{marginRight: -15}} />
-  //       </HeaderButtons>
-  //     ),
-  //   });
-  // }, [navigation]);
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <HeaderButtons HeaderButtonComponent={AppHeaderButton}>
+          <Item
+            iconName="ios-add"
+            iconSize={30}
+            // eslint-disable-next-line react-native/no-inline-styles
+            style={{marginRight: -15}}
+            onPress={() => navigation.navigate('Detail')}
+          />
+        </HeaderButtons>
+      ),
+    });
+  }, [navigation]);
 
   const renderItem = ({item}) => {
     return <PlaceListItem data={item} />;
   };
 
   const handleClick = () => {
-    LocalNotification();
+    LocalNotification('channel-id-1');
   };
 
+  const handleCurrentLocationClick = async () => {
+    setLocationLoading(true);
+    Geolocation.getCurrentPosition(
+      response => {
+        setLocationLoading(false);
+        navigation.navigate('Detail', {
+          latitude: response.coords.latitude,
+          longitude: response.coords.longitude,
+        });
+      },
+      error => {
+        setLocationLoading(false);
+        Alert.alert('Error', 'Something went wreong while fetching location');
+      },
+    );
+  };
+
+  const marginTop = 20;
   return (
     <View>
       <FlatList
@@ -61,7 +87,18 @@ const HomeScreen = ({navigation}) => {
         data={places}
         renderItem={renderItem}
       />
-      <Button title="Local Notification" onPress={handleClick} />
+      <View style={styles.container}>
+        <View style={{marginTop: marginTop}}>
+          <Button title="Local Push Notification" onPress={handleClick} />
+        </View>
+        <View style={{marginTop: marginTop}}>
+          <Button
+            title="Current Location"
+            onPress={handleCurrentLocationClick}
+            disabled={locationLoading}
+          />
+        </View>
+      </View>
     </View>
   );
 };
@@ -72,5 +109,9 @@ const styles = StyleSheet.create({
   list: {
     padding: 5,
     justifyContent: 'space-between',
+  },
+  container: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
