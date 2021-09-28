@@ -1,6 +1,6 @@
 import {useNavigation} from '@react-navigation/native';
 import React from 'react';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
+import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
 
 const PlaceListItem = props => {
   const navigation = useNavigation();
@@ -12,10 +12,13 @@ const PlaceListItem = props => {
         onPress={() => {
           navigation.navigate('Detail', props.data.loc);
         }}>
+        <Image
+          source={{
+            uri: props.data.imageUrl,
+          }}
+          style={styles.imageStyle}
+        />
         <Text style={styles.title}>{props.data.title}</Text>
-        <Text style={styles.subTitle}>
-          {props.data.loc.latitude}, {props.data.loc.longitude}
-        </Text>
       </Pressable>
     </View>
   );
@@ -32,8 +35,16 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   containerPressable: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 10,
+  },
+  imageStyle: {
+    height: 70,
+    width: 70,
+    borderRadius: 35,
+    marginRight: 10,
   },
   title: {
     fontSize: 20,

@@ -2,7 +2,7 @@ import PushNotification, {Importance} from 'react-native-push-notification';
 
 PushNotification.createChannel(
   {
-    channelId: 'channel-id;', // (required)
+    channelId: 'snapshots push', // (required)
     channelName: 'My channel', // (required)
     channelDescription: 'A channel to categorise your notifications', // (optional) default: undefined.
     playSound: false, // (optional) default: true
@@ -23,15 +23,15 @@ PushNotification.configure({
   requestPermissions: true,
 });
 
-export const LocalNotification = channelId => {
+export const LocalNotification = () => {
   PushNotification.localNotification({
-    channelId: 'channel-id',
+    channelId: 'snapshots push',
     autoCancel: true,
     bigText:
-      'Welcome to Snapshots! Here you can find all the great places in India!',
+      'This is local notification demo in React Native app. Only shown, when expanded.',
     subText: 'Local Notification Demo',
-    title: 'Local Notification from Snapshots',
-    message: 'All greate places in one place!',
+    title: 'Local Notification Title',
+    message: 'Expand me to see more',
     vibrate: true,
     vibration: 300,
     playSound: true,
