@@ -12,12 +12,7 @@ const PlaceListItem = props => {
         onPress={() => {
           navigation.navigate('Detail', props.data.loc);
         }}>
-        <Image
-          source={{
-            uri: props.data.imageUrl,
-          }}
-          style={styles.imageStyle}
-        />
+        <Image source={props.data.imageUrl} style={styles.imageStyle} />
         <Text style={styles.title}>{props.data.title}</Text>
       </Pressable>
     </View>
