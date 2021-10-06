@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Snapshots</string>
+    <string name="facebook_app_id">200061852146195</string>
+    <string name="fb_login_protocol_scheme">fb200061852146195</string>
 </resources>

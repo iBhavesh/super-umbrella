@@ -2,6 +2,7 @@ import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import {Button} from 'react-native-elements';
+import {AccessToken, LoginButton} from 'react-native-fbsdk-next';
 
 const AuthScreen = () => {
   GoogleSignin.configure({
@@ -27,6 +28,22 @@ const AuthScreen = () => {
           icon={{type: 'ionicon', name: 'ios-logo-google', color: 'white'}}
           title="Sign in with Google"
           onPress={handleGoogleSignin}
+        />
+      </View>
+      <View>
+        <LoginButton
+          onLoginFinished={(error, result) => {
+            if (error) {
+              console.log('login has error: ' + result.error);
+            } else if (result.isCancelled) {
+              console.log('login is cancelled.');
+            } else {
+              AccessToken.getCurrentAccessToken().then(data => {
+                console.log(data.accessToken.toString());
+              });
+            }
+          }}
+          onLogoutFinished={() => console.log('logout.')}
         />
       </View>
     </View>
