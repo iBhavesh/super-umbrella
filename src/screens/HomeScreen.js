@@ -9,10 +9,13 @@ import {
 } from 'react-native';
 import {HeaderButtons, Item} from 'react-navigation-header-buttons';
 import Geolocation from 'react-native-geolocation-service';
+import auth from '@react-native-firebase/auth';
 
 import AppHeaderButton from '../components/AppHeaderButton';
 import PlaceListItem from '../components/PlaceListItem';
 import {LocalNotification} from '../services/localPushController';
+import {LoginManager} from 'react-native-fbsdk-next';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 
 const MOCK_DATA = [
   {
@@ -45,6 +48,15 @@ const MOCK_DATA = [
 const HomeScreen = ({navigation}) => {
   const [places, setPlaces] = useState([]);
   const [locationLoading, setLocationLoading] = useState(false);
+
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(user => {
+      if (!user) {
+        navigation.replace('Auth');
+      }
+    });
+    return subscriber; // unsubscribe on unmount
+  }, [navigation]);
 
   useEffect(() => {
     setPlaces(MOCK_DATA);
@@ -108,6 +120,12 @@ const HomeScreen = ({navigation}) => {
     );
   };
 
+  const handleSignOut = () => {
+    GoogleSignin.signOut();
+    LoginManager.logOut();
+    auth().signOut();
+  };
+
   const marginTop = 20;
   return (
     <View>
@@ -126,6 +144,9 @@ const HomeScreen = ({navigation}) => {
             onPress={handleCurrentLocationClick}
             disabled={locationLoading}
           />
+        </View>
+        <View style={{marginTop: marginTop}}>
+          <Button title="Sign out" onPress={handleSignOut} />
         </View>
       </View>
     </View>
