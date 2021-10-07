@@ -5,7 +5,6 @@ import {Platform} from 'react-native';
 import colors from '../constants/colors';
 import HomeScreen from '../screens/HomeScreen';
 import MapScreen from '../screens/MapScreen';
-import AuthScreen from '../screens/AuthScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -17,11 +16,6 @@ const RootNavigator = () => {
         headerTintColor: !isIOS ? colors.primaryText : colors.primary,
         headerStyle: !isIOS ? {backgroundColor: colors.primary} : {},
       }}>
-      <Stack.Screen
-        name="Auth"
-        options={{headerShown: false}}
-        component={AuthScreen}
-      />
       <Stack.Screen
         name="Home"
         options={{title: 'Snapshots'}}

@@ -50,15 +50,6 @@ const HomeScreen = ({navigation}) => {
   const [locationLoading, setLocationLoading] = useState(false);
 
   useEffect(() => {
-    const subscriber = auth().onAuthStateChanged(user => {
-      if (!user) {
-        navigation.replace('Auth');
-      }
-    });
-    return subscriber; // unsubscribe on unmount
-  }, [navigation]);
-
-  useEffect(() => {
     setPlaces(MOCK_DATA);
   }, [setPlaces]);
 
@@ -123,7 +114,9 @@ const HomeScreen = ({navigation}) => {
   const handleSignOut = () => {
     GoogleSignin.signOut();
     LoginManager.logOut();
-    auth().signOut();
+    if (auth().currentUser) {
+      auth().signOut();
+    }
   };
 
   const marginTop = 20;

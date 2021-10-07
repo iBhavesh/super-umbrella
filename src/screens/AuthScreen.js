@@ -1,19 +1,19 @@
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import React, {useEffect, useState} from 'react';
-import {
-  ActivityIndicator,
-  Image,
-  Modal,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import {ActivityIndicator, Image, StyleSheet, Text, View} from 'react-native';
 import {Button} from 'react-native-elements';
 import auth from '@react-native-firebase/auth';
-import {AccessToken, LoginManager, Profile} from 'react-native-fbsdk-next';
+import {
+  AccessToken,
+  GraphRequest,
+  GraphRequestManager,
+  LoginManager,
+} from 'react-native-fbsdk-next';
+import Snackbar from 'react-native-snackbar';
 
-const AuthScreen = ({navigation}) => {
-  const [loading, setLoading] = useState(false);
+const AuthScreen = () => {
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [facebookLoading, setFacebookLoading] = useState(false);
 
   GoogleSignin.configure({
     webClientId:
@@ -22,82 +22,119 @@ const AuthScreen = ({navigation}) => {
 
   useEffect(() => {
     const subscriber = auth().onAuthStateChanged(user => {
-      console.log(user);
+      // console.log(user);
     });
     return subscriber; // unsubscribe on unmount
   }, []);
 
   const handleGoogleSignin = async () => {
     try {
-      setLoading(true);
-      const {idToken} = await GoogleSignin.signIn();
-      console.log(idToken);
-      const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-      console.log(googleCredential);
-      await auth().signInWithCredential(googleCredential);
-      setLoading(false);
-      navigation.replace('Home');
+      const response = await GoogleSignin.signIn();
+      if (!response) {
+        return;
+      }
+      const providers = await auth().fetchSignInMethodsForEmail(
+        response.user.email,
+      );
+      if (providers.length === 0) {
+        const googleCredential = auth.GoogleAuthProvider.credential(
+          response.idToken,
+        );
+        await auth().signInWithCredential(googleCredential);
+      }
+      providers.forEach(async value => {
+        if (value === 'google.com') {
+          const googleCredential = auth.GoogleAuthProvider.credential(
+            response.idToken,
+          );
+          await auth().signInWithCredential(googleCredential);
+        } else {
+          console.log('else');
+          Snackbar.show({
+            text: 'This account is already linked with Facebook. Please sign in with Facebook',
+          });
+          return;
+        }
+      });
     } catch (e) {
       console.log(e);
     }
-    setLoading(false);
+    setGoogleLoading(false);
   };
 
   const handleFacebookSignin = async () => {
+    setFacebookLoading(true);
     try {
       const response = await LoginManager.logInWithPermissions([
         'public_profile',
         'email',
       ]);
+      // setFacebookLoading(true);
 
       if (response.isCancelled) {
         console.log('Login cancelled');
+        setFacebookLoading(false);
         return;
       }
-      console.log(Profile());
 
       const data = await AccessToken.getCurrentAccessToken();
-
       if (!data) {
-        console.log('AccessToken not found');
         return;
       }
 
       const facebookCredential = auth.FacebookAuthProvider.credential(
         data.accessToken,
       );
-      console.log(facebookCredential);
-      // await auth().signInWithCredential(facebookCredential);
+
+      const infoRequest = new GraphRequest(
+        '/me?fields=id,name,email,picture{width:300,height:300  }',
+        null,
+        async (error, result) => {
+          if (error) {
+            console.log('Error fetching data: ' + error);
+          } else {
+            console.log(result);
+            const providers = await auth().fetchSignInMethodsForEmail(
+              result.email,
+            );
+            if (providers.length === 0) {
+              await auth().signInWithCredential(facebookCredential);
+              return;
+            }
+            if (providers.includes('facebook.com')) {
+              setFacebookLoading(true);
+              await auth().signInWithCredential(facebookCredential);
+              setFacebookLoading(true);
+            } else {
+              Snackbar.show({
+                text: 'This account is already linked with google. Please sign in with google',
+              });
+            }
+          }
+        },
+      );
+
+      // Start the graph request.
+      new GraphRequestManager().addRequest(infoRequest).start();
     } catch (e) {
-      if (e.code === 'auth/account-exists-with-different-credential') {
-        // console.log(auth.FacebookAuthProvider.);
-      }
+      console.log(e);
+      setFacebookLoading(false);
     }
+    setFacebookLoading(false);
   };
 
   const handleSignOut = () => {
     const user = auth().currentUser;
 
     if (user) {
-      GoogleSignin.signOut();
-      LoginManager.logOut();
       auth().signOut();
     }
+    GoogleSignin.signOut();
+    LoginManager.logOut();
   };
 
   return (
     <View style={styles.container}>
-      <Modal visible={loading} transparent={true} animationType="slide">
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: 'rgba(0,0,0,0.1)',
-          }}>
-          <ActivityIndicator size={40} />
-        </View>
-      </Modal>
       <Text style={styles.text}>Welcome to Snapshots</Text>
       <Text style={styles.subtitle}>Login to continue</Text>
       <View style={styles.imageContainer}>
@@ -107,19 +144,27 @@ const AuthScreen = ({navigation}) => {
         />
       </View>
       <View style={styles.buttonContainer}>
-        <Button
-          icon={{type: 'ionicon', name: 'ios-logo-google', color: 'white'}}
-          title="Sign in with Google"
-          containerStyle={styles.buttonStyle}
-          onPress={handleGoogleSignin}
-        />
+        {!googleLoading ? (
+          <Button
+            icon={{type: 'ionicon', name: 'ios-logo-google', color: 'white'}}
+            title="Sign in with Google"
+            containerStyle={styles.buttonStyle}
+            onPress={handleGoogleSignin}
+          />
+        ) : (
+          <ActivityIndicator size="large" />
+        )}
+        {!facebookLoading ? (
+          <Button
+            icon={{type: 'ionicon', name: 'ios-logo-facebook', color: 'white'}}
+            title="Sign in with Facebook"
+            containerStyle={styles.buttonStyle}
+            onPress={handleFacebookSignin}
+          />
+        ) : (
+          <ActivityIndicator size="large" />
+        )}
         {/* <Button
-          icon={{type: 'ionicon', name: 'ios-logo-facebook', color: 'white'}}
-          title="Sign in with Facebook"
-          containerStyle={styles.buttonStyle}
-          onPress={handleFacebookSignin}
-        />
-        <Button
           title="Sign out"
           containerStyle={styles.buttonStyle}
           onPress={handleSignOut}
@@ -132,6 +177,12 @@ const AuthScreen = ({navigation}) => {
 export default AuthScreen;
 
 const styles = StyleSheet.create({
+  activityIndicator: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.1)',
+  },
   buttonContainer: {
     flex: 1,
     justifyContent: 'center',
